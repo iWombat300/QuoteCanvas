@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuoteCanvas</title>
+</head>
+<body>
+    <h1 style="font-family:Calibri">QuoteCanvas</h1>
+
+    <div id="input">
+        <label for="quote" style="font-family:Calibri">Enter a motivational quote:</label><br>
+        <input type="text" id="quote" name="quote" size="50"><br><br>
+        <label for="height" style="font-family:Calibri">Canvas Height (px):</label><br>
+        <input type="number" id="height" name="height" value="2392"><br><br>
+        <label for="width" style="font-family:Calibri">Canvas Width (px):</label><br>
+        <input type="number" id="width" name="width" value="1080"><br><br>
+        <label for="fontsize" style="font-family:Calibri">Font Size (px):</label><br>
+        <input type="number" id="fontsize" name="fontsize" value="40"><br><br>
+        <button onclick="generateBackground()" style="font-family:Calibri">Generate Background</button>
+    </div>
+    <div id="canvas-container" style="height: 600px; margin-top: 20px; margin-bottom: 20px;">
+    </div>
+    <div id="download" hidden>
+        <button onclick="downloadImg()" style="font-family:Calibri">Download Image</button>
+    </div>
+
+
+</body>
+<script>
+    function generateBackground() {
+        const quote = document.getElementById('quote').value;
+        if (quote.trim() === '') {
+            alert('Please enter a motivational quote.');
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = parseInt(document.getElementById('width').value);
+        canvas.height = parseInt(document.getElementById('height').value);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = `${parseInt(document.getElementById('fontsize').value)}px Arial`;
+        ctx.fillStyle = '#FFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+
+        const lines = wrapText(ctx, quote, canvas.width - 40);
+        const lineHeight = 40;
+        const totalHeight = lines.length * lineHeight;
+        let y = (canvas.height - totalHeight) / 2;
+        lines.forEach(line => {
+            ctx.fillText(line, canvas.width / 2, y);
+            y += lineHeight;
+        });
+
+        const dataURL = canvas.toDataURL();
+        const img = new Image();
+        img.src = dataURL;
+        const container = document.getElementById('canvas-container');
+        container.innerHTML = '';
+        container.appendChild(img);
+        img.style.width = 'auto';
+        img.style.height = '100%';
+
+        document.getElementById('download').hidden = false;
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+        const words = text.split(' ');
+        const lines = [];
+        let currentLine = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+            const word = words[i];
+            const width = ctx.measureText(currentLine + ' ' + word).width;
+            if (width < maxWidth) {
+                currentLine += ' ' + word;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+        lines.push(currentLine);
+        return lines;
+    }
+    function downloadImg() {
+  const img = document.querySelector('body img:last-of-type');
+  if (!img || !img.src) { alert('No image to download'); return; }
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = 'motivational.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+</script>
+</html>
