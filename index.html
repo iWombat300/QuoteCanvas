@@ -17,6 +17,13 @@
         <input type="number" id="width" name="width" value="1080"><br><br>
         <label for="fontsize" style="font-family:Calibri">Font Size (px):</label><br>
         <input type="number" id="fontsize" name="fontsize" value="40"><br><br>
+        <div id="offsets" hidden>
+            <label for="x-offset" style="font-family:Calibri">X Offset (px):</label><br>
+            <input type="number" id="x-offset" name="x-offset" value="0"><br><br>
+            <label for="y-offset" style="font-family:Calibri">Y Offset (px):</label><br>
+            <input type="number" id="y-offset" name="y-offset" value="0"><br><br>
+        </div>
+        <button onclick="toggleAdvanced()" style="font-family:Calibri">Toggle Advanced Options</button>
         <button onclick="generateBackground()" style="font-family:Calibri">Generate Background</button>
     </div>
     <div id="canvas-container" style="height: 600px; margin-top: 20px; margin-bottom: 20px;">
@@ -28,10 +35,18 @@
 
 </body>
 <style>
+@media (prefers-color-scheme: dark) {
     body {
         background-color: #1c1c1c;
-        color: #FFFFFF;
+        color: #f0f0f0;
     }
+}  
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: #f0f0f0;
+        color: #000000;
+    }
+}
 </style>
 <script>
     function generateBackground() {
@@ -41,35 +56,44 @@
             return;
         }
 
+        const xOffset = parseInt(document.getElementById('x-offset').value, 10) || 0;
+        const yOffset = -1 * (parseInt(document.getElementById('y-offset').value, 10) || 0);
         const canvas = document.createElement('canvas');
-        canvas.width = parseInt(document.getElementById('width').value);
-        canvas.height = parseInt(document.getElementById('height').value);
+        const parsedWidth = parseInt(document.getElementById('width').value, 10);
+        const parsedHeight = parseInt(document.getElementById('height').value, 10);
+        canvas.width = (Number.isFinite(parsedWidth) && parsedWidth > 0) ? parsedWidth : 1080;
+        canvas.height = (Number.isFinite(parsedHeight) && parsedHeight > 0) ? parsedHeight : 2392;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.font = `${parseInt(document.getElementById('fontsize').value)}px Arial`;
+        const fontSize = parseInt(document.getElementById('fontsize').value, 10) || 40;
+        ctx.font = `${fontSize}px Arial`;
         ctx.fillStyle = '#FFF';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-
-        const lines = wrapText(ctx, quote, canvas.width - 40);
-        const lineHeight = 40;
+        const lines = wrapText(ctx, quote, canvas.width - 60);
+        const lineHeight = Math.ceil(fontSize * 1.2);
         const totalHeight = lines.length * lineHeight;
         let y = (canvas.height - totalHeight) / 2;
+        const drawX = canvas.width / 2 + xOffset;
         lines.forEach(line => {
-            ctx.fillText(line, canvas.width / 2, y);
+            ctx.fillText(line, drawX, y + yOffset);
             y += lineHeight;
         });
 
-        const dataURL = canvas.toDataURL();
+        const dataURL = canvas.toDataURL('image/png');
         const img = new Image();
         img.src = dataURL;
+        img.alt = 'Generated motivational quote';
         const container = document.getElementById('canvas-container');
         container.innerHTML = '';
         container.appendChild(img);
-        img.style.width = 'auto';
+        img.style.maxWidth = 'auto';
         img.style.height = '100%';
+
+        // store latest dataURL on container for reliable downloads
+        container.dataset.lastImage = dataURL;
 
         document.getElementById('download').hidden = false;
     }
@@ -77,7 +101,7 @@
     function wrapText(ctx, text, maxWidth) {
         const words = text.split(' ');
         const lines = [];
-        let currentLine = words[0];
+        let currentLine = words[0] || '';
 
         for (let i = 1; i < words.length; i++) {
             const word = words[i];
@@ -89,18 +113,25 @@
                 currentLine = word;
             }
         }
-        lines.push(currentLine);
+        if (currentLine) lines.push(currentLine);
         return lines;
     }
     function downloadImg() {
-  const img = document.querySelector('body img:last-of-type');
-  if (!img || !img.src) { alert('No image to download'); return; }
-  const a = document.createElement('a');
-  a.href = img.src;
-  a.download = 'motivational.png';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
+      const container = document.getElementById('canvas-container');
+      const img = container ? container.querySelector('img') : null;
+      const src = (container && container.dataset.lastImage) || (img && img.src);
+      if (!src) { alert('No image to download'); return; }
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = 'motivational.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function toggleAdvanced() {
+        const offsets = document.getElementById('offsets');
+        offsets.hidden = !offsets.hidden;
+    }
 </script>
 </html>
