@@ -11,6 +11,8 @@
     <div id="input">
         <label for="quote" style="font-family:Calibri">Enter a motivational quote:</label><br>
         <input type="text" id="quote" name="quote" size="50"><br><br>
+        <label for="Author" style="font-family: Calibri;">Enter the author's name:</label><br>
+        <input type="text" id="Author" name="Author" size="50"><br><br>
         <label for="height" style="font-family:Calibri">Canvas Height (px):</label><br>
         <input type="number" id="height" name="height" value="2392"><br><br>
         <label for="width" style="font-family:Calibri">Canvas Width (px):</label><br>
@@ -68,6 +70,7 @@
 
     function generateBackground() {
         const quote = document.getElementById('quote').value;
+        const author = document.getElementById('Author').value;
         if (quote.trim() === '') {
             alert('Please enter a motivational quote.');
             return;
@@ -83,21 +86,30 @@
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const fontSize = parseInt(document.getElementById('fontsize').value, 10) || 40;
+        const fontSize = parseInt(document.getElementById('fontsize').value, 10) || 68;
         ctx.font = `${fontSize}px Arial`;
         ctx.fillStyle = '#FFF';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const lines = wrapText(ctx, quote, canvas.width - 60);
+        const lines = wrapText(ctx, quote, canvas.width - 200);
         const lineHeight = Math.ceil(fontSize * 1.2);
-        const totalHeight = lines.length * lineHeight;
+        const authorGap = fontSize;
+        const totalHeight = lines.length * lineHeight + (author ? authorGap + lineHeight : 0);
         let y = (canvas.height - totalHeight) / 2;
         const drawX = canvas.width / 2 + xOffset;
+        const authorFontSize = Math.round(fontSize * 0.6);
+
         lines.forEach(line => {
             ctx.fillText(line, drawX, y + yOffset);
             y += lineHeight;
         });
+        
+        if (author) {
+            y += authorGap;
+            ctx.font = `${authorFontSize}px Arial`;
+            ctx.fillText(`— ${author}`, drawX, y + yOffset);
+        }
 
         const dataURL = canvas.toDataURL('image/png');
         const img = new Image();
