@@ -16,7 +16,7 @@
         <label for="width" style="font-family:Calibri">Canvas Width (px):</label><br>
         <input type="number" id="width" name="width" value="1080"><br><br>
         <label for="fontsize" style="font-family:Calibri">Font Size (px):</label><br>
-        <input type="number" id="fontsize" name="fontsize" value="40"><br><br>
+        <input type="number" id="fontsize" name="fontsize" value="68"><br><br>
         <div id="offsets" hidden>
             <label for="x-offset" style="font-family:Calibri">X Offset (px):</label><br>
             <input type="number" id="x-offset" name="x-offset" value="0"><br><br>
@@ -49,6 +49,23 @@
 }
 </style>
 <script>
+    const widthInput = document.getElementById('width');
+    const fontSizeInput = document.getElementById('fontsize');
+
+    let fontsizeedited = false;
+
+    widthInput.addEventListener("input", ()=>{
+        if (!fontsizeedited){
+            fontSizeInput.value=Math.round(widthInput.value/16);
+        }
+    });
+
+    fontSizeInput.addEventListener("input", ()=>{
+        fontsizeedited = true;
+    });
+
+
+
     function generateBackground() {
         const quote = document.getElementById('quote').value;
         if (quote.trim() === '') {
@@ -96,6 +113,7 @@
         container.dataset.lastImage = dataURL;
 
         document.getElementById('download').hidden = false;
+        fontsizeedited = false;
     }
 
     function wrapText(ctx, text, maxWidth) {
