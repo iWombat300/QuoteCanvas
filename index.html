@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuoteCanvas</title>
+    <title>Quotepapers</title>
 </head>
 <body>
-    <h1 style="font-family:Calibri">QuoteCanvas</h1>
+    <h1 style="font-family:Calibri">Quotepapers</h1>
 
     <div id="input">
         <label for="quote" style="font-family:Calibri">Enter a motivational quote:</label><br>
@@ -53,6 +53,11 @@
 <script>
     const widthInput = document.getElementById('width');
     const fontSizeInput = document.getElementById('fontsize');
+    const heightInput = document.getElementById('height');
+    const quoteInput = document.getElementById('quote');
+    const authorInput = document.getElementById('Author');
+    const xOffsetInput = document.getElementById('x-offset');
+    const yOffsetInput = document.getElementById('y-offset');
 
     let fontsizeedited = false;
 
@@ -60,12 +65,83 @@
         if (!fontsizeedited){
             fontSizeInput.value=Math.round(widthInput.value/16);
         }
+        rtg();
     });
 
     fontSizeInput.addEventListener("input", ()=>{
         fontsizeedited = true;
+        rtg();
     });
+    heightInput.addEventListener("input", rtg);
+    quoteInput.addEventListener("input", rtg);
+    authorInput.addEventListener("input", rtg);
+    xOffsetInput.addEventListener("input", rtg);
+    yOffsetInput.addEventListener("input", rtg);
 
+
+    function rtg(){
+        const quote = document.getElementById('quote').value;
+        const author = document.getElementById('Author').value;
+        if (quote.trim() === '') {
+            alert('Please enter a motivational quote.');
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        const parsedWidth = parseInt(document.getElementById('width').value, 10);
+        const parsedHeight = parseInt(document.getElementById('height').value, 10);
+        if (Number.isFinite(parsedHeight) && parsedHeight > 2400){
+        canvas.height = 2400;
+        }
+        else if (Number.isFinite(parsedHeight) && parsedHeight > 0){
+            canvas.height = parsedHeight;
+        }
+        const xOffset = (parseInt(document.getElementById('x-offset').value, 10) || 0)*(canvas.height/parsedHeight);
+        const yOffset = (-1 * (parseInt(document.getElementById('y-offset').value, 10) || 0))*(canvas.height/parsedHeight);
+        canvas.width = (Number.isFinite(parsedWidth) && parsedWidth > 0) ? (parsedWidth/parsedHeight)*canvas.height : 1080;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const fontSize = (parseInt(document.getElementById('fontsize').value, 10) || 68)*(canvas.width/parsedWidth);
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillStyle = '#FFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const lines = wrapText(ctx, quote, canvas.width - 200);
+        const lineHeight = Math.ceil(fontSize * 1.2);
+        const authorGap = fontSize;
+        const totalHeight = lines.length * lineHeight + (author ? authorGap + lineHeight : 0);
+        let y = (canvas.height - totalHeight) / 2;
+        const drawX = canvas.width / 2 + xOffset;
+        const authorFontSize = Math.round(fontSize * 0.6);
+
+        lines.forEach(line => {
+            ctx.fillText(line, drawX, y + yOffset);
+            y += lineHeight;
+        });
+        
+        if (author) {
+            y += authorGap;
+            ctx.font = `${authorFontSize}px Arial`;
+            ctx.fillText(`— ${author}`, drawX, y + yOffset);
+        }
+
+        const dataURL = canvas.toDataURL('image/png');
+        const img = new Image();
+        img.src = dataURL;
+        img.alt = 'Generated motivational quote';
+        const container = document.getElementById('canvas-container');
+        container.innerHTML = '';
+        container.appendChild(img);
+        img.style.maxWidth = 'auto';
+        img.style.height = '100%';
+
+        // store latest dataURL on container for reliable downloads
+        container.dataset.lastImage = dataURL;
+
+        document.getElementById('download').hidden = false;
+    }
 
 
     function generateBackground() {
@@ -147,6 +223,7 @@
         return lines;
     }
     function downloadImg() {
+      generateBackground();
       const container = document.getElementById('canvas-container');
       const img = container ? container.querySelector('img') : null;
       const src = (container && container.dataset.lastImage) || (img && img.src);
@@ -163,5 +240,6 @@
         const offsets = document.getElementById('offsets');
         offsets.hidden = !offsets.hidden;
     }
+
 </script>
 </html>
